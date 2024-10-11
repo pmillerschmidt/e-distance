@@ -1,3 +1,5 @@
+import random
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
@@ -13,6 +15,11 @@ MAX_GUESSES = 10
 # Load the dictionary
 nltk.download('words')
 dictionary = set(word.lower() for word in words.words() if word.isalpha())
+# Get the list of words and convert to lowercase
+word_list = [word.lower() for word in words.words() if word.isalpha() and 3 <= len(word) <= 8]
+# Create a set for faster lookup
+word_set = set(word_list)
+
 
 def get_neighbors(word):
     neighbors = []
@@ -52,6 +59,34 @@ def find_path(start, end):
                     queue.append((neighbor, path + [neighbor]))
     return None
 
+
+def get_random_word():
+    return random.choice(list(dictionary))
+
+def generate_word_pair():
+    while True:
+        start_word = random.choice(word_list)
+        end_word = random.choice(word_list)
+        path = find_path(start_word, end_word)
+        if path and 5 <= len(path) <= 8:  # 4 to 7 steps (5 to 8 including start word)
+            return start_word, end_word
+
+@app.route('/api/get_start_words', methods=['GET'])
+def get_start_words():
+    start_word, end_word = generate_word_pair()
+    return jsonify({
+        'start_word': start_word,
+        'end_word': end_word
+    })
+
+
+@app.route('/api/generate-words', methods=['GET'])
+def generate_words():
+    start_word, end_word = generate_word_pair()
+    return jsonify({
+        'start_word': start_word,
+        'end_word': end_word
+    })
 
 @app.route('/api/remaining-guesses', methods=['POST'])
 def remaining_guesses():
