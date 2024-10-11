@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from collections import defaultdict, deque
-from typing import List, Set, Tuple
+import logging
 import nltk
 from nltk.corpus import words
 
 app = Flask(__name__)
-CORS(app)  # This allows your React app to make requests to this server
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000", "supports_credentials": True}})
+
+logging.basicConfig(level=logging.DEBUG)
+MAX_GUESSES = 10
 
 # Load the dictionary
 nltk.download('words')
@@ -50,11 +52,40 @@ def find_path(start, end):
                     queue.append((neighbor, path + [neighbor]))
     return None
 
-@app.route('/api/validate-word', methods=['POST'])
-def validate_word():
+
+@app.route('/api/remaining-guesses', methods=['POST'])
+def remaining_guesses():
     data = request.json
-    word = data.get('word', '').lower()
-    return jsonify({'valid': word in dictionary})
+    start_word = data['start_word']
+    end_word = data['end_word']
+    current_word = data['current_word']
+    guesses_made = data['guesses']
+
+    # Simple logic: subtract guesses made from max guesses
+    remaining = max(0, MAX_GUESSES - guesses_made)
+
+    return jsonify({'remaining_guesses': remaining})
+
+
+@app.route('/api/validate-word', methods=['POST', 'OPTIONS'])
+def validate_word():
+    if request.method == 'OPTIONS':
+        # Preflight request. Reply successfully:
+        response = app.make_default_options_response()
+    else:
+        app.logger.debug(f"Received request: {request.json}")
+        data = request.json
+        word = data.get('word', '').lower()
+        valid = word in dictionary  # Ensure 'dictionary' is defined
+        app.logger.debug(f"Validating word: {word}, Result: {valid}")
+        response = jsonify({'valid': valid})
+
+    # Set CORS headers
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
+
 
 @app.route('/api/check-edit-distance', methods=['POST'])
 def check_edit_distance():
@@ -70,6 +101,13 @@ def api_find_path():
     end = data.get('end', '').lower()
     path = find_path(start, end)
     return jsonify({'path': path})
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 
 if __name__ == '__main__':
     app.run(debug=True)
