@@ -1,3 +1,4 @@
+import csv
 import random
 
 from flask import Flask, request, jsonify
@@ -64,12 +65,11 @@ def get_random_word():
     return random.choice(list(dictionary))
 
 def generate_word_pair():
-    while True:
-        start_word = random.choice(word_list)
-        end_word = random.choice(word_list)
-        path = find_path(start_word, end_word)
-        if path and 5 <= len(path) <= 8:  # 4 to 7 steps (5 to 8 including start word)
-            return start_word, end_word
+    with open('paths.csv', 'r', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        rows = list(reader)
+    path = random.choice(rows)
+    return path[0], path[-1]
 
 @app.route('/api/get_start_words', methods=['GET'])
 def get_start_words():
