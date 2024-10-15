@@ -1,5 +1,8 @@
 # LilyPad
 
+<img width="1728" alt="Screenshot 2024-10-15 at 12 38 53 PM" src="https://github.com/user-attachments/assets/6f3c2e9a-9844-44ad-b2c1-c6b42f0c3a53">
+
+Check out the demo video on [vimeo](https://vimeo.com/1019853134?share=copy).
 
 
 ### Rules
