@@ -411,6 +411,7 @@ const LilyPadGame = () => {
 
     if (!isValidWord) {
       setMessage('Not a word')
+      setGuess(''); // Clear the input field after a valid guess
       return;
     }
 
@@ -418,6 +419,7 @@ const LilyPadGame = () => {
 
     if (!isValidMove) {
       setMessage('Not one step away');
+      setGuess(''); // Clear the input field after a valid guess
       return;
     }
 
@@ -435,7 +437,7 @@ const LilyPadGame = () => {
       setCurrentDistance(newPath ? newPath.length - 1 : null);
       setMessage(`Valid move! Keep going.`);
     }
-
+    setGuess(''); // Clear the input field after a valid guess
     if (remainingGuesses <= 1 && guess.toLowerCase() !== endWord.toLowerCase()) {
       setMessage("Game over! You've run out of guesses.");
       setGameWon(true);  // This will disable further guesses
